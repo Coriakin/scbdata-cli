@@ -13,8 +13,7 @@ export const SCB_WFS_ENDPOINT = "https://geodata.scb.se/geoserver/stat/wfs";
 export const SCB_DESO_LAYERS = ["stat:DeSO_2025", "stat:DeSO_2024", "stat:DeSO_2023"] as const;
 export const NOMINATIM_ENDPOINT = "https://nominatim.openstreetmap.org/search";
 export const OVERPASS_ENDPOINT = "https://overpass-api.de/api/interpreter";
-export const VAL_RAW_DATA_PAGE =
-  "https://www.val.se/valresultat-och-statistik/statistik-och-data/radata-fran-val-2006-2022";
+export const VAL_STATISTICS_PAGE = "https://www.val.se/valresultat-och-statistik/statistik-och-data";
 
 export const SWEREF99_TM = "EPSG:3006";
 export const WGS84 = "EPSG:4326";

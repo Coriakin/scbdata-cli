@@ -10,6 +10,7 @@ import { AddressService } from "./services/address-service.js";
 import { DeSOService } from "./services/deso-service.js";
 import { ValresultatService } from "./services/valresultat-service.js";
 import { writeOutput } from "./output.js";
+import { StderrDebugLogger } from "./debug.js";
 import { NoopProgressReporter, TerminalProgressReporter } from "./progress.js";
 import { ScbDataError } from "./errors.js";
 import {
@@ -27,7 +28,8 @@ function addCommonOptions(command: Command): Command {
   return command
     .option("--format <format>", "output format: list, json, csv", DEFAULT_OUTPUT_FORMAT)
     .option("--cache <mode>", "cache mode: read, refresh, bypass", DEFAULT_CACHE_MODE)
-    .option("--output <path>", "write output to a file");
+    .option("--output <path>", "write output to a file")
+    .option("--debug", "write diagnostic details to stderr");
 }
 
 function addDesoOptions(command: Command): Command {
@@ -40,7 +42,8 @@ function resolveOptions(command: Command): CommandOptions {
     format: validateOutputFormat(options.format),
     cache: validateCacheMode(options.cache),
     output: options.output,
-    includeGeometry: Boolean(options.includeGeometry)
+    includeGeometry: Boolean(options.includeGeometry),
+    debug: Boolean(options.debug)
   };
 }
 
@@ -57,13 +60,15 @@ function createProgressReporter(command: Command) {
 }
 
 export async function runCli(argv = process.argv): Promise<void> {
+  const debugLogger = new StderrDebugLogger(argv.includes("--debug"));
+
   const cacheStore = new CacheStore();
   const httpClient = new HttpClient();
 
   const scbAdapter = new ScbWfsAdapter(httpClient, cacheStore);
   const nominatimAdapter = new NominatimAdapter(httpClient, cacheStore);
   const overpassAdapter = new OverpassAdapter(httpClient, cacheStore);
-  const valmyndighetenAdapter = new ValmyndighetenAdapter(httpClient, cacheStore);
+  const valmyndighetenAdapter = new ValmyndighetenAdapter(httpClient, cacheStore, debugLogger);
 
   const desoService = new DeSOService(scbAdapter, nominatimAdapter);
   const addressService = new AddressService(desoService, overpassAdapter);

@@ -94,4 +94,5 @@ export interface CommandOptions {
   cache: CacheMode;
   output?: string;
   includeGeometry?: boolean;
+  debug?: boolean;
 }
