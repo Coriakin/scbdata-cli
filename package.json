@@ -1,0 +1,39 @@
+{
+  "name": "scbdata",
+  "version": "0.1.0",
+  "description": "CLI for DeSO lookups, address extraction, and election result aggregation.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "scbdata": "./dist/index.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@turf/area": "^7.2.0",
+    "@turf/bbox": "^7.2.0",
+    "@turf/boolean-point-in-polygon": "^7.2.0",
+    "@turf/helpers": "^7.2.0",
+    "@turf/intersect": "^7.2.0",
+    "adm-zip": "^0.5.16",
+    "cheerio": "^1.1.2",
+    "commander": "^14.0.1",
+    "fast-xml-parser": "^5.2.5",
+    "proj4": "^2.19.10",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/node": "^24.5.2",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
