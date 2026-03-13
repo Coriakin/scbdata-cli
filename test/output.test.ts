@@ -32,6 +32,27 @@ describe("formatOutput", () => {
     expect(text).not.toContain('"coordinates"');
   });
 
+  it("formats address lists as readable address lines", () => {
+    const text = formatOutput(
+      [
+        {
+          id: "node/1",
+          street: "Sturehillsvägen",
+          houseNumber: "25",
+          postcode: "117 56",
+          city: "Stockholm",
+          lat: 59.3,
+          lon: 18.0,
+          source: "overpass"
+        }
+      ],
+      "list"
+    );
+
+    expect(text).toContain("Sturehillsvägen 25, 117 56 Stockholm");
+    expect(text).not.toContain("id:");
+  });
+
   it("formats csv output", () => {
     expect(formatOutput([{ street: "Main", houseNumber: "1" }], "csv")).toContain("street,houseNumber");
   });

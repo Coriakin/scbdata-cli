@@ -1,5 +1,5 @@
 import fs from "node:fs/promises";
-import type { OutputFormat } from "./types.js";
+import type { AddressRecord, OutputFormat } from "./types.js";
 import { serializeCsv } from "./utils/csv.js";
 
 export async function writeOutput(
@@ -29,11 +29,19 @@ export function formatOutput(data: unknown, format: OutputFormat): string {
 }
 
 function formatList(data: unknown): string {
+  if (Array.isArray(data) && data.every(isAddressRecord)) {
+    return `${data.map((address) => formatAddressLine(address)).join("\n")}\n`;
+  }
+
   if (Array.isArray(data)) {
     if (data.length === 0) {
       return "No results.\n";
     }
     return `${data.map((row) => formatStructuredValue(row, 0).trimEnd()).join("\n\n")}\n`;
+  }
+
+  if (isAddressRecord(data)) {
+    return `${formatAddressDetail(data)}\n`;
   }
 
   return `${formatStructuredValue(data, 0)}\n`;
@@ -129,6 +137,33 @@ function summarizeGeoJsonFeature(value: {
   }
 
   return summary;
+}
+
+function isAddressRecord(value: unknown): value is AddressRecord {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "street" in value &&
+      "lat" in value &&
+      "lon" in value
+  );
+}
+
+function formatAddressLine(address: AddressRecord): string {
+  const streetPart = [address.street, address.houseNumber].filter(Boolean).join(" ");
+  const localityPart = [address.postcode, address.city].filter(Boolean).join(" ");
+  return [streetPart, localityPart].filter(Boolean).join(", ");
+}
+
+function formatAddressDetail(address: AddressRecord): string {
+  return [
+    `address: ${formatAddressLine(address)}`,
+    `id: ${address.id}`,
+    `municipality: ${address.municipality ?? ""}`,
+    `lat: ${address.lat}`,
+    `lon: ${address.lon}`,
+    `source: ${address.source}`
+  ].join("\n");
 }
 
 function flattenObject(data: unknown, prefix = ""): Record<string, unknown> {

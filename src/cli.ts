@@ -10,6 +10,7 @@ import { AddressService } from "./services/address-service.js";
 import { DeSOService } from "./services/deso-service.js";
 import { ValresultatService } from "./services/valresultat-service.js";
 import { writeOutput } from "./output.js";
+import { NoopProgressReporter, TerminalProgressReporter } from "./progress.js";
 import { ScbDataError } from "./errors.js";
 import {
   parseLatitude,
@@ -47,6 +48,14 @@ function actionCommand(args: unknown[]): Command {
   return args[args.length - 1] as Command;
 }
 
+function createProgressReporter(command: Command) {
+  const opts = command.opts();
+  if (opts.output) {
+    return new NoopProgressReporter();
+  }
+  return new TerminalProgressReporter();
+}
+
 export async function runCli(argv = process.argv): Promise<void> {
   const cacheStore = new CacheStore();
   const httpClient = new HttpClient();
@@ -74,11 +83,14 @@ export async function runCli(argv = process.argv): Promise<void> {
         const [latValue, lonValue] = args as [string, string];
         const command = actionCommand(args);
         const options = resolveOptions(command);
+        const progress = createProgressReporter(command);
         const result = await desoService.fromCoordinates(
           options.cache,
           parseLatitude(latValue),
-          parseLongitude(lonValue)
+          parseLongitude(lonValue),
+          progress
         );
+        progress.complete("DeSO resolved");
         await writeOutput(formatDeSOResult(result, options.includeGeometry), options.format, options.output);
       })
   );
@@ -92,7 +104,9 @@ export async function runCli(argv = process.argv): Promise<void> {
         const [query] = args as [string];
         const command = actionCommand(args);
         const options = resolveOptions(command);
-        const result = await desoService.fromAddress(options.cache, query);
+        const progress = createProgressReporter(command);
+        const result = await desoService.fromAddress(options.cache, query, progress);
+        progress.complete("DeSO resolved");
         await writeOutput(formatDeSOResult(result, options.includeGeometry), options.format, options.output);
       })
   );
@@ -106,7 +120,9 @@ export async function runCli(argv = process.argv): Promise<void> {
         command.help();
       }
       const options = resolveOptions(command);
-      const result = await addressService.byDeSO(options.cache, validateDeSOId(desoId!));
+      const progress = createProgressReporter(command);
+      const result = await addressService.byDeSO(options.cache, validateDeSOId(desoId!), progress);
+      progress.complete(`Fetched ${result.length} addresses`);
       await writeOutput(result, options.format, options.output);
     });
 
@@ -119,7 +135,9 @@ export async function runCli(argv = process.argv): Promise<void> {
         const [query] = args as [string];
         const command = actionCommand(args);
         const options = resolveOptions(command);
-        const result = await addressService.byAddress(options.cache, query);
+        const progress = createProgressReporter(command);
+        const result = await addressService.byAddress(options.cache, query, progress);
+        progress.complete(`Fetched ${result.length} addresses`);
         await writeOutput(result, options.format, options.output);
       })
   );
@@ -134,11 +152,14 @@ export async function runCli(argv = process.argv): Promise<void> {
         const [latValue, lonValue] = args as [string, string];
         const command = actionCommand(args);
         const options = resolveOptions(command);
+        const progress = createProgressReporter(command);
         const result = await addressService.byCoordinates(
           options.cache,
           parseLatitude(latValue),
-          parseLongitude(lonValue)
+          parseLongitude(lonValue),
+          progress
         );
+        progress.complete(`Fetched ${result.length} addresses`);
         await writeOutput(result, options.format, options.output);
       })
   );
@@ -152,7 +173,9 @@ export async function runCli(argv = process.argv): Promise<void> {
         const [desoId] = args as [string];
         const command = actionCommand(args);
         const options = resolveOptions(command);
-        const result = await addressService.byDeSO(options.cache, validateDeSOId(desoId));
+        const progress = createProgressReporter(command);
+        const result = await addressService.byDeSO(options.cache, validateDeSOId(desoId), progress);
+        progress.complete(`Fetched ${result.length} addresses`);
         await writeOutput(result, options.format, options.output);
       })
   );
@@ -169,12 +192,15 @@ export async function runCli(argv = process.argv): Promise<void> {
         const command = actionCommand(args);
         const options = resolveOptions(command);
         const raw = command.opts();
+        const progress = createProgressReporter(command);
         const result = await valresultatService.byDeSO(
           options.cache,
           validateDeSOId(desoId),
           validateElectionType(raw.election),
-          validateElectionYear(raw.year)
+          validateElectionYear(raw.year),
+          progress
         );
+        progress.complete("Election results aggregated");
         await writeOutput(result, options.format, options.output);
       })
   );

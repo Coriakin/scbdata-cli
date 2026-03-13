@@ -23,6 +23,8 @@ Shared flags:
 
 - `--include-geometry` to include the full GeoJSON geometry in the output
 
+When running interactively, progress/status updates are written to `stderr` so `stdout` stays clean for piping and file output.
+
 ## Run from source
 
 If you have this repository locally and have not installed `scbdata` via Homebrew or another package manager:
@@ -55,6 +57,8 @@ npm run dev -- deso from-address "Drottninggatan 1, Stockholm"
 - OpenStreetMap Nominatim for geocoding
 - OpenStreetMap Overpass for address extraction
 - Valmyndigheten raw data for election results
+
+Address completeness depends on the upstream OpenStreetMap data. Some address records may be missing fields such as postcode even when street, house number, and city are present, because `addr:postcode` is not always tagged on each individual address object.
 
 ## Election mapping
 
