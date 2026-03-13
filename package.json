@@ -13,6 +13,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsx src/index.ts",
+    "package:release": "node scripts/package-release.mjs",
+    "generate:homebrew": "node scripts/generate-homebrew-formula.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

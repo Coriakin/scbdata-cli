@@ -1,0 +1,107 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    name: Build ${{ matrix.label }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: linux-x64
+            runner: ubuntu-latest
+            platform: linux
+            arch: x64
+          - label: linux-arm64
+            runner: ubuntu-24.04-arm
+            platform: linux
+            arch: arm64
+          - label: darwin-arm64
+            runner: macos-14
+            platform: darwin
+            arch: arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - run: npm prune --omit=dev
+      - name: Set release version
+        run: echo "RELEASE_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Package release bundle
+        run: node scripts/package-release.mjs
+        env:
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+          RELEASE_PLATFORM: ${{ matrix.platform }}
+          RELEASE_ARCH: ${{ matrix.arch }}
+
+      - name: Create tarball
+        run: tar -czf "artifacts/scbdata-v${RELEASE_VERSION}-${{ matrix.platform }}-${{ matrix.arch }}.tar.gz" -C artifacts "scbdata-v${RELEASE_VERSION}-${{ matrix.platform }}-${{ matrix.arch }}"
+
+      - name: Upload tarball artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: scbdata-${{ matrix.platform }}-${{ matrix.arch }}
+          path: artifacts/*.tar.gz
+
+  publish-release:
+    name: Publish GitHub release
+    needs: build-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Collect assets
+        run: |
+          mkdir -p dist-release
+          find release-assets -name '*.tar.gz' -exec cp {} dist-release/ \;
+          sha256sum dist-release/*.tar.gz > dist-release/checksums.txt
+
+      - name: Extract checksums
+        id: checksums
+        run: |
+          echo "darwin_arm64=$(grep 'darwin-arm64' dist-release/checksums.txt | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          echo "linux_x64=$(grep 'linux-x64' dist-release/checksums.txt | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          echo "linux_arm64=$(grep 'linux-arm64' dist-release/checksums.txt | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Generate Homebrew formula
+        run: |
+          mkdir -p dist-release/homebrew
+          node scripts/generate-homebrew-formula.mjs > dist-release/homebrew/scbdata.rb
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          RELEASE_VERSION: ${{ github.ref_name }}
+          DARWIN_ARM64_SHA256: ${{ steps.checksums.outputs.darwin_arm64 }}
+          LINUX_X64_SHA256: ${{ steps.checksums.outputs.linux_x64 }}
+          LINUX_ARM64_SHA256: ${{ steps.checksums.outputs.linux_arm64 }}
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist-release/*.tar.gz
+            dist-release/checksums.txt
+            dist-release/homebrew/scbdata.rb
