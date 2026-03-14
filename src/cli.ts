@@ -59,7 +59,41 @@ function createProgressReporter(command: Command) {
   return new TerminalProgressReporter();
 }
 
-export async function runCli(argv = process.argv): Promise<void> {
+function formatHelpBlock(lines: string[]): string {
+  return `\n${lines.join("\n")}\n`;
+}
+
+function addRootHelp(command: Command): void {
+  command.addHelpText(
+    "after",
+    formatHelpBlock([
+      "Command details:",
+      "  deso from-coords <lat> <lon>         Resolve DeSO from coordinates",
+      "  deso from-address <query>            Resolve DeSO from a free-form address",
+      "  addresses <desoId>                   Fetch all addresses in a DeSO",
+      "  addresses from-address <query>       Resolve address to DeSO and fetch all addresses",
+      "  addresses from-coords <lat> <lon>    Resolve coordinates to DeSO and fetch all addresses",
+      "  valresultat <desoId> --election <type> --year <year>",
+      "                                       Fetch aggregated election results for a DeSO"
+    ])
+  );
+}
+
+function addDesoHelp(command: Command): void {
+  command.addHelpText(
+    "after",
+    formatHelpBlock([
+      "Shared options for deso subcommands:",
+      `  --format <format>                    output format: list, json, csv (default: "${DEFAULT_OUTPUT_FORMAT}")`,
+      `  --cache <mode>                       cache mode: read, refresh, bypass (default: "${DEFAULT_CACHE_MODE}")`,
+      "  --output <path>                      write output to a file",
+      "  --debug                              write diagnostic details to stderr",
+      "  --include-geometry                   include full DeSO geometry in the output"
+    ])
+  );
+}
+
+export function buildProgram(argv = process.argv): Command {
   const debugLogger = new StderrDebugLogger(argv.includes("--debug"));
 
   const cacheStore = new CacheStore();
@@ -76,8 +110,10 @@ export async function runCli(argv = process.argv): Promise<void> {
 
   const program = new Command();
   program.name(APP_NAME).description("DeSO and election data lookup CLI").version(APP_VERSION);
+  addRootHelp(program);
 
   const deso = program.command("deso").description("Resolve DeSO areas");
+  addDesoHelp(deso);
   addDesoOptions(
     deso
       .command("from-coords")
@@ -209,6 +245,12 @@ export async function runCli(argv = process.argv): Promise<void> {
         await writeOutput(result, options.format, options.output);
       })
   );
+
+  return program;
+}
+
+export async function runCli(argv = process.argv): Promise<void> {
+  const program = buildProgram(argv);
 
   try {
     await program.parseAsync(argv);
