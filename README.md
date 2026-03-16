@@ -59,6 +59,9 @@ GitHub Actions is configured for:
 - release builds on tags like `v0.1.0`
 - release artifacts for `linux-x64`, `linux-arm64`, and `darwin-arm64`
 - a generated Homebrew formula artifact for use in a tap
+- an optional dispatch to `Coriakin/homebrew-scbdata-cli` so the tap updates itself after release
+
+To enable the tap update dispatch, configure a repository secret named `HOMEBREW_TAP_REPO_TOKEN` with permission to trigger repository dispatch events in `Coriakin/homebrew-scbdata-cli`.
 
 The release bundles currently package the compiled CLI plus production `node_modules`, and the installed `scbdata` launcher uses the system `node`. A Homebrew formula can therefore depend on `node` rather than installing a fully static binary.
 
