@@ -2,7 +2,7 @@ import path from "node:path";
 import os from "node:os";
 
 export const APP_NAME = "scbdata";
-export const APP_VERSION = "0.1.1";
+export const APP_VERSION = "0.1.2";
 export const DEFAULT_OUTPUT_FORMAT = "list";
 export const DEFAULT_CACHE_MODE = "read";
 export const DEFAULT_CACHE_DIR = path.join(os.homedir(), ".cache", APP_NAME);

@@ -56,7 +56,7 @@ npm run dev -- deso from-address "Drottninggatan 1, Stockholm"
 GitHub Actions is configured for:
 
 - CI on push and pull request with Node 22
-- release builds on tags like `v0.1.1`
+- release builds on tags like `v0.1.2`
 - release artifacts for `linux-x64`, `linux-arm64`, and `darwin-arm64`
 - a generated Homebrew formula artifact for use in a tap
 - an optional dispatch to `Coriakin/homebrew-scbdata-cli` so the tap updates itself after release

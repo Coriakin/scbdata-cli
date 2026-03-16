@@ -1,6 +1,6 @@
 {
   "name": "scbdata",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "CLI for DeSO lookups, address extraction, and election result aggregation.",
   "license": "MIT",
   "type": "module",
