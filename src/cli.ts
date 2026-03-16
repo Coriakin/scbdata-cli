@@ -74,7 +74,7 @@ function addRootHelp(command: Command): void {
       "  addresses from-address <query>       Resolve address to DeSO and fetch all addresses",
       "  addresses from-coords <lat> <lon>    Resolve coordinates to DeSO and fetch all addresses",
       "  valresultat <desoId> --election <type> --year <year>",
-      "                                       Fetch aggregated election results for a DeSO"
+      "                                       Fetch aggregated election results for a DeSO using required election/year inputs"
     ])
   );
 }
@@ -89,6 +89,20 @@ function addDesoHelp(command: Command): void {
       "  --output <path>                      write output to a file",
       "  --debug                              write diagnostic details to stderr",
       "  --include-geometry                   include full DeSO geometry in the output"
+    ])
+  );
+}
+
+function addValresultatHelp(command: Command): void {
+  command.addHelpText(
+    "after",
+    formatHelpBlock([
+      "Example:",
+      "  scbdata valresultat 0180C1234567 --election riksdag --year 2022",
+      "",
+      "Required inputs:",
+      "  --election <type>                    election type for the aggregation lookup",
+      "  --year <year>                        election year for the aggregation lookup"
     ])
   );
 }
@@ -221,7 +235,7 @@ export function buildProgram(argv = process.argv): Command {
       })
   );
 
-  addCommonOptions(
+  const valresultat = addCommonOptions(
     program
       .command("valresultat")
       .description("Fetch aggregated election results for a DeSO")
@@ -245,6 +259,7 @@ export function buildProgram(argv = process.argv): Command {
         await writeOutput(result, options.format, options.output);
       })
   );
+  addValresultatHelp(valresultat);
 
   return program;
 }
